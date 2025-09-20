@@ -20,8 +20,8 @@ type PaletteItem = {
 
 const paletteItems: PaletteItem[] = [
 	{ id: "trigger", label: "Trigger", icon: <MousePointer2 size={16} />, type: "default" },
-	{ id: "http", label: "HTTP Request", icon: <Webhook size={16} />, type: "input" },
 	{ id: "code", label: "Code", icon: <Code2 size={16} />, type: "default" },
+	{ id: "http", label: "HTTP Request", icon: <Webhook size={16} />, type: "input" },
 	{ id: "set", label: "Set", icon: <Settings2 size={16} />, type: "output" },
 ];
 
@@ -35,11 +35,11 @@ export default function SidebarPalette({ onZoomIn, onZoomOut, onFitView }: Sideb
 	return (
 		<aside className="flex w-64 shrink-0 flex-col gap-2 border-r bg-card p-3">
 			<div className="mb-2 text-sm font-medium">Nodes</div>
-			<div className="flex flex-col gap-2">
+			<div className="flex flex-wrap gap-2">
 				{paletteItems.map((item) => (
 					<button
 						key={item.id}
-						className="flex items-center justify-between rounded-md border px-3 py-2 text-left text-sm hover:bg-muted"
+						className="flex items-center cursor-pointer justify-between rounded-md border px-3 py-2 text-left text-sm hover:bg-muted"
 						draggable
 						onDragStart={(event) => {
 							event.dataTransfer.setData("application/reactflow", item.type);
@@ -51,7 +51,6 @@ export default function SidebarPalette({ onZoomIn, onZoomOut, onFitView }: Sideb
 							{item.icon}
 							<span>{item.label}</span>
 						</span>
-						<span className="text-foreground/60">drag</span>
 					</button>
 				))}
 			</div>
