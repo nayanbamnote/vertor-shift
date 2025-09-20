@@ -1,9 +1,9 @@
 import React from "react";
 import {
 	MousePointer2,
-	Webhook,
-	Code2,
-	Settings2,
+	Bot,
+	Type,
+	Monitor,
 	ZoomIn,
 	ZoomOut,
 	ScanSearch,
@@ -19,10 +19,10 @@ type PaletteItem = {
 };
 
 const paletteItems: PaletteItem[] = [
-	{ id: "trigger", label: "Trigger", icon: <MousePointer2 size={16} />, type: "default" },
-	{ id: "code", label: "Code", icon: <Code2 size={16} />, type: "default" },
-	{ id: "http", label: "HTTP Request", icon: <Webhook size={16} />, type: "input" },
-	{ id: "set", label: "Set", icon: <Settings2 size={16} />, type: "output" },
+	{ id: "input", label: "Input Node", icon: <MousePointer2 size={16} />, type: "input-node" },
+	{ id: "llm", label: "LLM Node", icon: <Bot size={16} />, type: "llm-node" },
+	{ id: "text", label: "Text Node", icon: <Type size={16} />, type: "text-node" },
+	{ id: "output", label: "Output Node", icon: <Monitor size={16} />, type: "output-node" },
 ];
 
 interface SidebarPaletteProps {

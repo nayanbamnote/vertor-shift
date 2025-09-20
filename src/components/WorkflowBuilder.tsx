@@ -20,9 +20,19 @@ import type {
 import { Trash2 } from "lucide-react";
 import "reactflow/dist/style.css";
 import { useWorkflowStore, type WorkflowNode } from "../stores/workflowStore";
+import { nodeRegistry } from "../nodes";
 import SidebarPalette from "./SidebarPalette";
+import { GenericReactFlowNode } from "./nodes";
 
 const rfSnapGrid: [number, number] = [16, 16];
+
+// Node types for ReactFlow - using generic component for all types
+const nodeTypes = {
+  'input-node': GenericReactFlowNode,
+  'llm-node': GenericReactFlowNode,
+  'text-node': GenericReactFlowNode,
+  'output-node': GenericReactFlowNode,
+};
 
 // Custom edge with hover delete icon
 const RemovableSmoothEdge: React.FC<EdgeProps> = (props) => {
@@ -122,6 +132,18 @@ export default function WorkflowBuilder() {
 			y: event.clientY - reactFlowBounds.top,
 		});
 		const id = `${type}-${Date.now()}`;
+		
+		// Get default config from node registry
+		const nodeDefinition = nodeRegistry.getDefinition(type);
+		const defaultConfig: Record<string, any> = {};
+		if (nodeDefinition?.manifest.configSchema.properties) {
+			Object.entries(nodeDefinition.manifest.configSchema.properties).forEach(([key, prop]: [string, any]) => {
+				if (prop && typeof prop === 'object' && prop.default !== undefined) {
+					defaultConfig[key] = prop.default;
+				}
+			});
+		}
+		
 		const newNode: WorkflowNode = {
 			id,
 			type: type as Node["type"],
@@ -129,7 +151,7 @@ export default function WorkflowBuilder() {
 			data: { label: label || type },
 			sourcePosition: Position.Right,
 			targetPosition: Position.Left,
-			config: {},
+			config: defaultConfig,
 			meta: { x: position.x, y: position.y },
 		};
 		addNode(newNode);
@@ -193,6 +215,7 @@ export default function WorkflowBuilder() {
 					className="h-full w-full"
 					nodes={nodes}
 					edges={edges}
+					nodeTypes={nodeTypes}
 					onNodesChange={onNodesChange}
 					onConnect={onConnect}
 					onInit={onInit}
