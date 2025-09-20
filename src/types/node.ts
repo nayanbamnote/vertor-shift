@@ -38,11 +38,6 @@ export interface NodeManifest {
   ui: {
     editor: string;
   };
-  capabilities?: {
-    canRunFrontend?: boolean;
-    requiresBackend?: boolean;
-    streamable?: boolean;
-  };
   permissions?: string[];
 }
 

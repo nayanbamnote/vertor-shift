@@ -1,39 +1,8 @@
 import type { BaseNode, NodeDefinition, NodeManifest } from '../../types/node';
 import { createBaseNode } from '../../lib/baseNode';
+import manifestData from './manifest.json';
 
-const manifest: NodeManifest = {
-  type: 'text-node',
-  displayName: 'Text Node',
-  version: 1,
-  category: 'transform',
-  icon: 'text.svg',
-  description: 'Text processing and transformation node',
-  inputs: [
-    { id: 'input', label: 'Input' }
-  ],
-  outputs: [
-    { id: 'output', label: 'Output' }
-  ],
-  configSchema: {
-    type: 'object',
-    properties: {
-      text: { 
-        type: 'string', 
-        default: '' 
-      }
-    },
-    required: ['text'],
-    additionalProperties: false
-  },
-  ui: {
-    editor: './ui.tsx'
-  },
-  capabilities: {
-    canRunFrontend: true,
-    requiresBackend: false,
-    streamable: false
-  }
-};
+const manifest: NodeManifest = manifestData as NodeManifest;
 
 export const nodeDefinition: NodeDefinition = {
   type: 'text-node',

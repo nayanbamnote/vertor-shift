@@ -1,0 +1,34 @@
+{
+  "type": "input-node",
+  "displayName": "Input Node",
+  "version": 1,
+  "category": "data",
+  "icon": "input.svg",
+  "description": "Input node for entering text or integers",
+  "inputs": [],
+  "outputs": [
+    { "id": "output", "label": "Output" }
+  ],
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "value": { 
+        "type": "string", 
+        "default": "" 
+      },
+      "dataType": { 
+        "type": "string", 
+        "default": "Text"
+      }
+    },
+    "required": ["value", "dataType"],
+    "additionalProperties": false
+  },
+  "ui": {
+    "editor": "./ui.tsx"
+  },
+  "capabilities": {
+    "canRunFrontend": true,
+    "requiresBackend": false
+  }
+}

@@ -1,41 +1,8 @@
 import type { BaseNode, NodeDefinition, NodeManifest } from '../../types/node';
 import { createBaseNode } from '../../lib/baseNode';
+import manifestData from './manifest.json';
 
-const manifest: NodeManifest = {
-  type: 'input-node',
-  displayName: 'Input Node',
-  version: 1,
-  category: 'data',
-  icon: 'input.svg',
-  description: 'Input node for entering text or integers',
-  inputs: [],
-  outputs: [
-    { id: 'output', label: 'Output' }
-  ],
-  configSchema: {
-    type: 'object',
-    properties: {
-      value: { 
-        type: 'string', 
-        default: '' 
-      },
-      dataType: { 
-        type: 'string', 
-        default: 'Text'
-      }
-    },
-    required: ['value', 'dataType'],
-    additionalProperties: false
-  },
-  ui: {
-    editor: './ui.tsx'
-  },
-  capabilities: {
-    canRunFrontend: true,
-    requiresBackend: false,
-    streamable: false
-  }
-};
+const manifest: NodeManifest = manifestData as NodeManifest;
 
 export const nodeDefinition: NodeDefinition = {
   type: 'input-node',
