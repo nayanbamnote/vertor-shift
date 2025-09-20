@@ -1,0 +1,331 @@
+---
+alwaysApply: false
+---
+# BaseNode Implementation Guide
+
+## Core Architecture
+
+The BaseNode system uses a **single source of truth** pattern where Zustand store holds the complete graph JSON, and ReactFlow renders it as a visual interface. Each node follows a strict contract to ensure consistency across the system.
+
+### Data Flow
+```
+User Interaction → Node UI (ui.tsx) → Store Action (updateNodeConfig) → Zustand Store → ReactFlow Re-render
+```
+
+## BaseNode Interface
+
+Every node must implement this exact interface:
+
+```typescript
+interface BaseNode {
+  // Instance properties
+  id: string;                    // unique node instance ID
+  type: string;                  // node type slug
+  version: number;               // schema version
+  displayName: string;           // human readable name
+  config: Record<string, any>;   // node configuration data
+  meta: Record<string, any>;     // UI state (position, collapsed, etc)
+  inputs: PortDefinition[];      // input port definitions
+  outputs: PortDefinition[];     // output port definitions
+  
+  // Required methods
+  getConfigSchema(): JsonSchemaObject;
+  validateConfig(config: any): ValidationResult;
+  serialize(): NodeSerializable;
+  deserialize(snapshot: NodeSerializable): void;
+  
+  // Optional lifecycle hooks
+  onAttach?(): void;
+  onDetach?(): void;
+  migrate?(oldConfig: any, oldVersion: number): any;
+}
+
+// Node definition interface for type metadata
+interface NodeDefinition {
+  type: string;                  // matches manifest.type
+  version: number;               // matches manifest.version
+  manifest: NodeManifest;        // the manifest.json content
+}
+```
+
+## Node Folder Structure
+
+Each node must follow this exact structure:
+
+```
+/src/nodes/<NodeName>/
+├── manifest.json    # Node definition and schema
+├── index.ts         # Exports manifest, Node, and NodeEditor
+├── Node.ts          # BaseNode implementation (class or factory)
+└── ui.tsx           # React editor component
+```
+
+## Required Files Implementation
+
+### 1. manifest.json
+
+```json
+{
+  "type": "node-type-slug",
+  "displayName": "Human Readable Name",
+  "version": 1,
+  "category": "ai|utility|data|transform",
+  "icon": "icon-name.svg",
+  "description": "Brief node description",
+  "inputs": [
+    { "id": "input-id", "label": "Input Label" }
+  ],
+  "outputs": [
+    { "id": "output-id", "label": "Output Label" }
+  ],
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "fieldName": { "type": "string", "default": "defaultValue" }
+    },
+    "required": ["fieldName"],
+    "additionalProperties": false
+  },
+  "ui": {
+    "editor": "./ui.tsx"
+  },
+  "capabilities": {
+    "canRunFrontend": true|false,
+    "requiresBackend": true|false,
+    "streamable": true|false
+  },
+  "permissions": ["network", "secret"] // if needed
+}
+```
+
+### 2. Node.ts
+
+```typescript
+import { BaseNode, NodeSerializable, ValidationResult, NodeDefinition } from '../types';
+import manifest from './manifest.json';
+
+// Node definition metadata
+export const nodeDefinition: NodeDefinition = {
+  type: 'node-type-slug',
+  version: 1,
+  manifest
+};
+
+// Factory function to create node instances
+export function createMyNode(id: string, config = {}, meta = {}): BaseNode {
+  const getDefaultConfig = (): Record<string, any> => {
+    const schema = manifest.configSchema;
+    const defaults: Record<string, any> = {};
+    
+    Object.entries(schema.properties || {}).forEach(([key, prop]: [string, any]) => {
+      if (prop.default !== undefined) {
+        defaults[key] = prop.default;
+      }
+    });
+    
+    return defaults;
+  };
+
+  return {
+    id,
+    type: nodeDefinition.type,
+    version: nodeDefinition.version,
+    displayName: manifest.displayName,
+    config: { ...getDefaultConfig(), ...config },
+    meta,
+    inputs: manifest.inputs,
+    outputs: manifest.outputs,
+    
+    getConfigSchema(): JsonSchemaObject {
+      return manifest.configSchema;
+    },
+    
+    validateConfig(config: any): ValidationResult {
+      return validateAgainstSchema(this.getConfigSchema(), config);
+    },
+    
+    serialize(): NodeSerializable {
+      return {
+        id: this.id,
+        type: this.type,
+        version: this.version,
+        config: this.config,
+        meta: this.meta
+      };
+    },
+    
+    deserialize(snapshot: NodeSerializable): void {
+      this.id = snapshot.id;
+      this.config = snapshot.config;
+      this.meta = snapshot.meta;
+    }
+  };
+}
+
+// Default export for compatibility
+export default createMyNode;
+```
+
+### 3. ui.tsx
+
+```typescript
+import React, { useState } from 'react';
+
+interface NodeEditorProps {
+  nodeId: string;
+  manifest: NodeManifest;
+  config: Record<string, any>;
+  setConfig: (patch: Record<string, any>) => Promise<ValidationResult>;
+  position?: { x: number; y: number };
+  onClose?: () => void;
+}
+
+export default function MyNodeEditor({ nodeId, manifest, config, setConfig }: NodeEditorProps) {
+  const [localConfig, setLocalConfig] = useState(config);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  const handleSave = async () => {
+    const result = await setConfig(localConfig);
+    
+    if (!result.ok) {
+      setErrors(result.errors || {});
+    } else {
+      setErrors({});
+      // Optional: close editor or show success
+    }
+  };
+  
+  return (
+    <div className="p-4 bg-white rounded-lg shadow-lg">
+      <h3 className="text-lg font-semibold mb-4">{manifest.displayName}</h3>
+      
+      {/* Render form fields based on configSchema */}
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Field Name
+          </label>
+          <input
+            type="text"
+            value={localConfig.fieldName || ''}
+            onChange={(e) => setLocalConfig(prev => ({
+              ...prev,
+              fieldName: e.target.value
+            }))}
+            className="w-full px-3 py-2 border rounded-md"
+          />
+          {errors.fieldName && (
+            <p className="text-red-500 text-sm mt-1">{errors.fieldName}</p>
+          )}
+        </div>
+      </div>
+      
+      <div className="flex justify-end space-x-2 mt-6">
+        <button
+          onClick={handleSave}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Save
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
+### 4. index.ts
+
+```typescript
+export { default as manifest } from './manifest.json';
+export { createMyNode as Node, nodeDefinition } from './Node';
+export { default as NodeEditor } from './ui';
+```
+
+## Store Integration
+
+The Zustand store must implement these exact actions:
+
+```typescript
+interface NodeStore {
+  nodes: Record<string, NodeSerializable>;
+  edges: Record<string, EdgeData>;
+  
+  // Required actions
+  addNode: (node: NodeSerializable) => void;
+  updateNodeConfig: (nodeId: string, configPatch: Record<string, any>) => Promise<ValidationResult>;
+  updateNodePosition: (nodeId: string, position: { x: number; y: number }) => void;
+  removeNode: (nodeId: string) => void;
+  
+  // UI state
+  openEditorNodeId: string | null;
+  setOpenEditor: (nodeId: string | null) => void;
+}
+```
+
+The `updateNodeConfig` action implementation must:
+
+1. Find the node in store by ID
+2. Get node definition from registry using `node.type`  
+3. Validate merged config using `validateAgainstSchema(nodeDef.configSchema, mergedConfig)`
+4. If valid: merge patch and return `{ ok: true }`
+5. If invalid: don't merge, return `{ ok: false, errors }`
+
+## Adding a New Node: Step-by-Step
+
+### Step 1: Create Node Folder
+```bash
+mkdir src/nodes/MyNodeName
+cd src/nodes/MyNodeName
+```
+
+### Step 2: Create manifest.json
+Copy the manifest template above and customize:
+- Set unique `type` slug
+- Define `inputs` and `outputs` ports  
+- Define `configSchema` with proper JSON Schema
+- Set `capabilities` based on node requirements
+
+### Step 3: Implement Node.ts
+- Create factory function that returns BaseNode interface
+- Implement all required methods as object methods
+- Ensure `nodeDefinition.type` matches `manifest.type`
+- Ensure `nodeDefinition.version` matches `manifest.version`
+
+### Step 4: Create ui.tsx
+- Use the NodeEditorProps interface
+- Handle local form state for responsive typing
+- Call `setConfig` on save with validation error handling
+- Use Tailwind classes for styling
+
+### Step 5: Create index.ts
+Export the three required items: `manifest`, `Node`, `NodeEditor`
+
+### Step 6: Register Node
+Add to your node registry system so the type can be resolved at runtime.
+
+## Validation Rules
+
+Every node must follow these rules:
+
+- `manifest.type` must match `nodeDefinition.type`
+- `manifest.version` must match `nodeDefinition.version`  
+- `configSchema` must be valid JSON Schema
+- `serialize()` must return only JSON-serializable data
+- UI must only write config via `setConfig` prop
+- No localStorage/sessionStorage usage in artifacts
+
+## Node Serialization Format
+
+When store calls `node.serialize()`, it must return this exact shape:
+
+```json
+{
+  "id": "node-123",
+  "type": "my-node-type", 
+  "version": 1,
+  "config": { "field": "value" },
+  "meta": { "x": 100, "y": 200, "collapsed": false }
+}
+```
+
+This format is what gets stored in the Zustand store and used for save/load operations.
