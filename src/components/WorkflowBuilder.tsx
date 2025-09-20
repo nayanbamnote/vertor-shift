@@ -1,16 +1,12 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useRef } from "react";
 import ReactFlow, {
-	addEdge,
 	Background,
 	BackgroundVariant,
 	Controls,
 	MiniMap,
-	useEdgesState,
-	useNodesState,
 	Position,
 	BaseEdge,
 	EdgeLabelRenderer,
-	useReactFlow,
 	getBezierPath,
 } from "reactflow";
 import type {
@@ -21,42 +17,18 @@ import type {
 	ReactFlowInstance,
 	EdgeProps,
 } from "reactflow";
-import {
-	MousePointer2,
-	Webhook,
-	Code2,
-	Settings2,
-	Trash2,
-	ZoomIn,
-	ZoomOut,
-	ScanSearch,
-} from "lucide-react";
+import { Trash2 } from "lucide-react";
 import "reactflow/dist/style.css";
-
-type PaletteItem = {
-	id: string;
-	label: string;
-	icon: React.ReactNode;
-	type: string;
-};
-
-const initialNodes: Node[] = [];
-const initialEdges: Edge[] = [];
-
-const paletteItems: PaletteItem[] = [
-	{ id: "trigger", label: "Trigger", icon: <MousePointer2 size={16} />, type: "default" },
-	{ id: "http", label: "HTTP Request", icon: <Webhook size={16} />, type: "input" },
-	{ id: "code", label: "Code", icon: <Code2 size={16} />, type: "default" },
-	{ id: "set", label: "Set", icon: <Settings2 size={16} />, type: "output" },
-];
+import { useWorkflowStore, type WorkflowNode } from "../stores/workflowStore";
+import SidebarPalette from "./SidebarPalette";
 
 const rfSnapGrid: [number, number] = [16, 16];
 
 // Custom edge with hover delete icon
 const RemovableSmoothEdge: React.FC<EdgeProps> = (props) => {
 	const { id, sourceX, sourceY, targetX, targetY, markerEnd, style } = props;
-	const { setEdges } = useReactFlow();
-	const [hovered, setHovered] = useState(false);
+	const deleteEdge = useWorkflowStore((state) => state.deleteEdge);
+	const [hovered, setHovered] = React.useState(false);
 
 	const [edgePath, labelX, labelY] = getBezierPath({
 		sourceX,
@@ -94,7 +66,7 @@ const RemovableSmoothEdge: React.FC<EdgeProps> = (props) => {
 						className="flex h-5 w-5 items-center justify-center rounded hover:bg-destructive/10"
 						onClick={(e) => {
 							e.stopPropagation();
-							setEdges((eds) => eds.filter((e) => e.id !== id));
+							deleteEdge(id);
 						}}
 					>
 						<Trash2 size={12} />
@@ -106,15 +78,32 @@ const RemovableSmoothEdge: React.FC<EdgeProps> = (props) => {
 };
 
 export default function WorkflowBuilder() {
-	const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-	const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-	const [selectedEdgeIds, setSelectedEdgeIds] = useState<Set<string>>(new Set());
+	// Zustand store
+	const {
+		nodes,
+		edges,
+		selectedEdgeIds,
+		addNode,
+		updateNodePosition,
+		connectNodes,
+		deleteEdge,
+		setSelectedEdgeIds,
+	} = useWorkflowStore();
+
 	const reactFlowWrapperRef = useRef<HTMLDivElement | null>(null);
 	const reactFlowInstanceRef = useRef<ReactFlowInstance | null>(null);
 
+	const onNodesChange = useCallback((changes: any[]) => {
+		changes.forEach((change) => {
+			if (change.type === "position" && change.position) {
+				updateNodePosition(change.id, change.position);
+			}
+		});
+	}, [updateNodePosition]);
+
 	const onConnect = useCallback((connection: Connection) => {
-		setEdges((eds) => addEdge({ ...connection, type: "removable" }, eds));
-	}, [setEdges]);
+		connectNodes(connection);
+	}, [connectNodes]);
 
 	const onInit = useCallback((instance: ReactFlowInstance) => {
 		reactFlowInstanceRef.current = instance;
@@ -133,16 +122,18 @@ export default function WorkflowBuilder() {
 			y: event.clientY - reactFlowBounds.top,
 		});
 		const id = `${type}-${Date.now()}`;
-		const newNode: Node = {
+		const newNode: WorkflowNode = {
 			id,
 			type: type as Node["type"],
 			position,
 			data: { label: label || type },
 			sourcePosition: Position.Right,
 			targetPosition: Position.Left,
+			config: {},
+			meta: { x: position.x, y: position.y },
 		};
-		setNodes((nds) => nds.concat(newNode));
-	}, [setNodes]);
+		addNode(newNode);
+	}, [addNode]);
 
 	const onDragOver = useCallback((event: React.DragEvent) => {
 		event.preventDefault();
@@ -151,22 +142,22 @@ export default function WorkflowBuilder() {
 
 	const onEdgesDelete: OnEdgesDelete = useCallback((deleted) => {
 		const toDelete = new Set(deleted.map((e) => e.id));
-		setSelectedEdgeIds((prev) => {
+		setSelectedEdgeIds((prev: Set<string>) => {
 			const next = new Set(prev);
 			toDelete.forEach((id) => next.delete(id));
 			return next;
 		});
-	}, []);
+	}, [setSelectedEdgeIds]);
 
 	const onSelectionChange = useCallback((params: { nodes: Node[]; edges: Edge[] }) => {
 		setSelectedEdgeIds(new Set(params.edges.map((e) => e.id)));
-	}, []);
+	}, [setSelectedEdgeIds]);
 
 	const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
 		if ((event.key === "Delete" || event.key === "Backspace") && selectedEdgeIds.size > 0) {
-			setEdges((eds) => eds.filter((e) => !selectedEdgeIds.has(e.id)));
+			selectedEdgeIds.forEach((id) => deleteEdge(id));
 		}
-	}, [selectedEdgeIds, setEdges]);
+	}, [selectedEdgeIds, deleteEdge]);
 
 	const nodeColor = useCallback((n: Node) => {
 		if (n.type === "input") return "#16a34a"; // green
@@ -174,59 +165,27 @@ export default function WorkflowBuilder() {
 		return "#6b7280"; // gray
 	}, []);
 
-	const palette = useMemo(() => paletteItems, []);
+	// Zoom controls
+	const handleZoomIn = useCallback(() => {
+		reactFlowInstanceRef.current?.zoomIn();
+	}, []);
+
+	const handleZoomOut = useCallback(() => {
+		reactFlowInstanceRef.current?.zoomOut();
+	}, []);
+
+	const handleFitView = useCallback(() => {
+		reactFlowInstanceRef.current?.fitView({ padding: 0.2 });
+	}, []);
 
 	return (
 		<div className="flex h-svh w-full" onKeyDown={handleKeyDown} tabIndex={0}>
 			{/* Sidebar Palette */}
-			<aside className="flex w-64 shrink-0 flex-col gap-2 border-r bg-card p-3">
-				<div className="mb-2 text-sm font-medium">Nodes</div>
-				<div className="flex flex-col gap-2">
-					{palette.map((item) => (
-						<button
-							key={item.id}
-							className="flex items-center justify-between rounded-md border px-3 py-2 text-left text-sm hover:bg-muted"
-							draggable
-							onDragStart={(event) => {
-								event.dataTransfer.setData("application/reactflow", item.type);
-								event.dataTransfer.setData("application/reactflow/label", item.label);
-								event.dataTransfer.effectAllowed = "move";
-							}}
-						>
-							<span className="flex items-center gap-2">
-								{item.icon}
-								<span>{item.label}</span>
-							</span>
-							<span className="text-foreground/60">drag</span>
-					</button>
-					))}
-				</div>
-			<div className="mt-auto flex flex-col gap-2">
-					<div className="flex items-center gap-2">
-						<button
-							className="flex flex-1 items-center justify-center rounded-md border p-2 hover:bg-muted"
-							onClick={() => reactFlowInstanceRef.current?.zoomIn()}
-							title="Zoom In"
-						>
-							<ZoomIn size={16} />
-						</button>
-						<button
-							className="flex flex-1 items-center justify-center rounded-md border p-2 hover:bg-muted"
-							onClick={() => reactFlowInstanceRef.current?.zoomOut()}
-							title="Zoom Out"
-						>
-							<ZoomOut size={16} />
-						</button>
-						<button
-							className="flex flex-1 items-center justify-center rounded-md border p-2 hover:bg-muted"
-							onClick={() => reactFlowInstanceRef.current?.fitView({ padding: 0.2 })}
-							title="Fit View"
-						>
-							<ScanSearch size={16} />
-						</button>
-					</div>
-				</div>
-			</aside>
+			<SidebarPalette
+				onZoomIn={handleZoomIn}
+				onZoomOut={handleZoomOut}
+				onFitView={handleFitView}
+			/>
 
 			{/* Canvas */}
 			<div className="relative flex-1" ref={reactFlowWrapperRef}>
@@ -235,7 +194,6 @@ export default function WorkflowBuilder() {
 					nodes={nodes}
 					edges={edges}
 					onNodesChange={onNodesChange}
-					onEdgesChange={onEdgesChange}
 					onConnect={onConnect}
 					onInit={onInit}
 					onDrop={onDrop}
@@ -248,7 +206,6 @@ export default function WorkflowBuilder() {
 					snapGrid={rfSnapGrid}
 					panOnScroll
 					selectionOnDrag
-					/* deleteKeyCode prop removed: using manual key handler on wrapper */
 				>
 					<Background variant={BackgroundVariant.Dots} gap={16} size={1} />
 					<Controls position="bottom-right" />
