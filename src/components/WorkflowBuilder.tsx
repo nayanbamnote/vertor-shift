@@ -7,6 +7,11 @@ import ReactFlow, {
 	MiniMap,
 	useEdgesState,
 	useNodesState,
+	Position,
+	BaseEdge,
+	EdgeLabelRenderer,
+	useReactFlow,
+	getBezierPath,
 } from "reactflow";
 import type {
 	Connection,
@@ -14,6 +19,7 @@ import type {
 	Node,
 	OnEdgesDelete,
 	ReactFlowInstance,
+	EdgeProps,
 } from "reactflow";
 import {
 	MousePointer2,
@@ -46,6 +52,59 @@ const paletteItems: PaletteItem[] = [
 
 const rfSnapGrid: [number, number] = [16, 16];
 
+// Custom edge with hover delete icon
+const RemovableSmoothEdge: React.FC<EdgeProps> = (props) => {
+	const { id, sourceX, sourceY, targetX, targetY, markerEnd, style } = props;
+	const { setEdges } = useReactFlow();
+	const [hovered, setHovered] = useState(false);
+
+	const [edgePath, labelX, labelY] = getBezierPath({
+		sourceX,
+		sourceY,
+		targetX,
+		targetY,
+	});
+
+	return (
+		<g>
+			<BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
+			<path
+				d={edgePath}
+				fill="none"
+				stroke="transparent"
+				strokeWidth={20}
+				onMouseEnter={() => setHovered(true)}
+				onMouseLeave={() => setHovered(false)}
+			/>
+			<EdgeLabelRenderer>
+				<div
+					style={{
+						position: "absolute",
+						transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+						pointerEvents: "all",
+					}}
+					className={`z-10 rounded border bg-background/90 p-1 shadow transition-opacity ${
+						hovered ? "opacity-100" : "opacity-0"
+					}`}
+					onMouseEnter={() => setHovered(true)}
+					onMouseLeave={() => setHovered(false)}
+				>
+					<button
+						title="Delete edge"
+						className="flex h-5 w-5 items-center justify-center rounded hover:bg-destructive/10"
+						onClick={(e) => {
+							e.stopPropagation();
+							setEdges((eds) => eds.filter((e) => e.id !== id));
+						}}
+					>
+						<Trash2 size={12} />
+					</button>
+				</div>
+			</EdgeLabelRenderer>
+		</g>
+	);
+};
+
 export default function WorkflowBuilder() {
 	const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
 	const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -54,7 +113,7 @@ export default function WorkflowBuilder() {
 	const reactFlowInstanceRef = useRef<ReactFlowInstance | null>(null);
 
 	const onConnect = useCallback((connection: Connection) => {
-		setEdges((eds) => addEdge({ ...connection, type: "smoothstep" }, eds));
+		setEdges((eds) => addEdge({ ...connection, type: "removable" }, eds));
 	}, [setEdges]);
 
 	const onInit = useCallback((instance: ReactFlowInstance) => {
@@ -79,6 +138,8 @@ export default function WorkflowBuilder() {
 			type: type as Node["type"],
 			position,
 			data: { label: label || type },
+			sourcePosition: Position.Right,
+			targetPosition: Position.Left,
 		};
 		setNodes((nds) => nds.concat(newNode));
 	}, [setNodes]);
@@ -137,10 +198,10 @@ export default function WorkflowBuilder() {
 								<span>{item.label}</span>
 							</span>
 							<span className="text-foreground/60">drag</span>
-						</button>
+					</button>
 					))}
 				</div>
-				<div className="mt-auto flex flex-col gap-2">
+			<div className="mt-auto flex flex-col gap-2">
 					<div className="flex items-center gap-2">
 						<button
 							className="flex flex-1 items-center justify-center rounded-md border p-2 hover:bg-muted"
@@ -164,15 +225,6 @@ export default function WorkflowBuilder() {
 							<ScanSearch size={16} />
 						</button>
 					</div>
-					<button
-						className="flex items-center justify-center gap-1 rounded-md border p-2 text-sm hover:bg-muted"
-						onClick={() => {
-							if (selectedEdgeIds.size === 0) return;
-							setEdges((eds) => eds.filter((e) => !selectedEdgeIds.has(e.id)));
-						}}
-					>
-						<Trash2 size={16} /> Delete edge
-					</button>
 				</div>
 			</aside>
 
@@ -190,6 +242,7 @@ export default function WorkflowBuilder() {
 					onDragOver={onDragOver}
 					onEdgesDelete={onEdgesDelete}
 					onSelectionChange={onSelectionChange}
+					edgeTypes={{ removable: RemovableSmoothEdge }}
 					fitView
 					snapToGrid
 					snapGrid={rfSnapGrid}
