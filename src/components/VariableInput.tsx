@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
 import type { Variable } from '../lib/variableUtils';
 import { parseVariables, validateVariables, getVariableSuggestions, getVariableTypeColor, getVariableTypeIcon } from '../lib/variableUtils';
 
@@ -21,7 +21,7 @@ export function VariableInput({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [cursorPosition, setCursorPosition] = useState(0);
   const [currentVariableInput, setCurrentVariableInput] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
   // Parse and validate variables in the current text
@@ -121,21 +121,20 @@ export function VariableInput({
   return (
     <div className="relative">
       <div className="relative">
-        <Input
+        <Textarea
           ref={inputRef}
-          type="text"
           value={value}
           onChange={(e) => handleChange(e.target.value)}
           onKeyDown={handleKeyDown}
           onSelect={handleCursorChange}
           onClick={handleCursorChange}
           placeholder={placeholder}
-          className={`w-full text-sm h-8 font-mono ${className}`}
+          className={`w-full text-sm min-h-8 max-w-96 max-h-32 font-mono resize-none ${className}`}
         />
         
         {/* Variable highlights overlay */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="relative h-full flex items-center px-3 text-sm font-mono whitespace-nowrap">
+          <div className="relative h-full flex items-start px-3 py-2 text-sm font-mono whitespace-pre-wrap">
             {value.split('').map((char, index) => {
               const match = variableMatches.find(m => index >= m.start && index < m.end);
               if (match) {

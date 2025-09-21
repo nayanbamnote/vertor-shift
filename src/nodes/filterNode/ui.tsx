@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Input } from '../../components/ui/input';
 import { Checkbox } from '../../components/ui/checkbox';
 import {
@@ -11,23 +10,18 @@ import { ChevronDown } from 'lucide-react';
 import type { NodeEditorProps } from '../../types/node';
 
 export default function FilterNodeEditor({ manifest, config, setConfig }: NodeEditorProps) {
-  const [localConfig, setLocalConfig] = useState(config);
-  
   const handleConditionChange = (condition: string) => {
-    const newConfig = { ...localConfig, condition };
-    setLocalConfig(newConfig);
+    const newConfig = { ...config, condition };
     setConfig(newConfig);
   };
   
   const handleValueChange = (value: string) => {
-    const newConfig = { ...localConfig, value };
-    setLocalConfig(newConfig);
+    const newConfig = { ...config, value };
     setConfig(newConfig);
   };
   
   const handleCaseSensitiveChange = (caseSensitive: boolean) => {
-    const newConfig = { ...localConfig, caseSensitive };
-    setLocalConfig(newConfig);
+    const newConfig = { ...config, caseSensitive };
     setConfig(newConfig);
   };
   
@@ -43,7 +37,7 @@ export default function FilterNodeEditor({ manifest, config, setConfig }: NodeEd
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center justify-between w-full px-2 py-1 text-xs border rounded-md bg-background hover:bg-muted h-8">
-                <span>{localConfig.condition || 'contains'}</span>
+                <span>{config.condition || 'contains'}</span>
                 <ChevronDown className="h-3 w-3" />
               </button>
             </DropdownMenuTrigger>
@@ -70,7 +64,7 @@ export default function FilterNodeEditor({ manifest, config, setConfig }: NodeEd
           </label>
           <Input
             type="text"
-            value={localConfig.value || ''}
+            value={config.value || ''}
             onChange={(e) => handleValueChange(e.target.value)}
             placeholder="Enter filter value..."
             className="w-full text-sm h-8"
@@ -80,7 +74,7 @@ export default function FilterNodeEditor({ manifest, config, setConfig }: NodeEd
         <div className="flex items-center space-x-2">
           <Checkbox
             id="caseSensitive"
-            checked={localConfig.caseSensitive || false}
+            checked={config.caseSensitive || false}
             onCheckedChange={handleCaseSensitiveChange}
           />
           <label htmlFor="caseSensitive" className="text-xs font-medium text-gray-600">

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Input } from '../../components/ui/input';
 import { Checkbox } from '../../components/ui/checkbox';
 import {
@@ -11,24 +10,19 @@ import { ChevronDown } from 'lucide-react';
 import type { NodeEditorProps } from '../../types/node';
 
 export default function DelayNodeEditor({ manifest, config, setConfig }: NodeEditorProps) {
-  const [localConfig, setLocalConfig] = useState(config);
-  
   const handleDelayChange = (delay: string) => {
     const numValue = parseFloat(delay) || 1000;
-    const newConfig = { ...localConfig, delay: numValue };
-    setLocalConfig(newConfig);
+    const newConfig = { ...config, delay: numValue };
     setConfig(newConfig);
   };
   
   const handleUnitChange = (unit: string) => {
-    const newConfig = { ...localConfig, unit };
-    setLocalConfig(newConfig);
+    const newConfig = { ...config, unit };
     setConfig(newConfig);
   };
   
   const handleRandomDelayChange = (randomDelay: boolean) => {
-    const newConfig = { ...localConfig, randomDelay };
-    setLocalConfig(newConfig);
+    const newConfig = { ...config, randomDelay };
     setConfig(newConfig);
   };
   
@@ -43,7 +37,7 @@ export default function DelayNodeEditor({ manifest, config, setConfig }: NodeEdi
           </label>
           <Input
             type="number"
-            value={localConfig.delay || 1000}
+            value={config.delay || 1000}
             onChange={(e) => handleDelayChange(e.target.value)}
             placeholder="Enter delay..."
             className="w-full text-sm h-8"
@@ -57,7 +51,7 @@ export default function DelayNodeEditor({ manifest, config, setConfig }: NodeEdi
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center justify-between w-full px-2 py-1 text-xs border rounded-md bg-background hover:bg-muted h-8">
-                <span>{localConfig.unit || 'milliseconds'}</span>
+                <span>{config.unit || 'milliseconds'}</span>
                 <ChevronDown className="h-3 w-3" />
               </button>
             </DropdownMenuTrigger>
@@ -78,7 +72,7 @@ export default function DelayNodeEditor({ manifest, config, setConfig }: NodeEdi
         <div className="flex items-center space-x-2">
           <Checkbox
             id="randomDelay"
-            checked={localConfig.randomDelay || false}
+            checked={config.randomDelay || false}
             onCheckedChange={handleRandomDelayChange}
           />
           <label htmlFor="randomDelay" className="text-xs font-medium text-gray-600">

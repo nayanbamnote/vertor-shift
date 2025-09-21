@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Input } from '../../components/ui/input';
 import {
   DropdownMenu,
@@ -10,23 +9,18 @@ import { ChevronDown } from 'lucide-react';
 import type { NodeEditorProps } from '../../types/node';
 
 export default function ConditionNodeEditor({ manifest, config, setConfig }: NodeEditorProps) {
-  const [localConfig, setLocalConfig] = useState(config);
-  
   const handleOperatorChange = (operator: string) => {
-    const newConfig = { ...localConfig, operator };
-    setLocalConfig(newConfig);
+    const newConfig = { ...config, operator };
     setConfig(newConfig);
   };
   
   const handleValueChange = (value: string) => {
-    const newConfig = { ...localConfig, value };
-    setLocalConfig(newConfig);
+    const newConfig = { ...config, value };
     setConfig(newConfig);
   };
   
   const handleDataTypeChange = (dataType: string) => {
-    const newConfig = { ...localConfig, dataType };
-    setLocalConfig(newConfig);
+    const newConfig = { ...config, dataType };
     setConfig(newConfig);
   };
   
@@ -42,7 +36,7 @@ export default function ConditionNodeEditor({ manifest, config, setConfig }: Nod
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center justify-between w-full px-2 py-1 text-xs border rounded-md bg-background hover:bg-muted h-8">
-                <span>{localConfig.operator || 'equals'}</span>
+                <span>{config.operator || 'equals'}</span>
                 <ChevronDown className="h-3 w-3" />
               </button>
             </DropdownMenuTrigger>
@@ -72,7 +66,7 @@ export default function ConditionNodeEditor({ manifest, config, setConfig }: Nod
           </label>
           <Input
             type="text"
-            value={localConfig.value || ''}
+            value={config.value || ''}
             onChange={(e) => handleValueChange(e.target.value)}
             placeholder="Enter value to compare..."
             className="w-full text-sm h-8"
@@ -86,7 +80,7 @@ export default function ConditionNodeEditor({ manifest, config, setConfig }: Nod
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center justify-between w-full px-2 py-1 text-xs border rounded-md bg-background hover:bg-muted h-8">
-                <span>{localConfig.dataType || 'string'}</span>
+                <span>{config.dataType || 'string'}</span>
                 <ChevronDown className="h-3 w-3" />
               </button>
             </DropdownMenuTrigger>

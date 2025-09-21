@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Input } from '../../components/ui/input';
 import {
   DropdownMenu,
@@ -10,18 +9,14 @@ import { ChevronDown } from 'lucide-react';
 import type { NodeEditorProps } from '../../types/node';
 
 export default function MathNodeEditor({ manifest, config, setConfig }: NodeEditorProps) {
-  const [localConfig, setLocalConfig] = useState(config);
-  
   const handleOperationChange = (operation: string) => {
-    const newConfig = { ...localConfig, operation };
-    setLocalConfig(newConfig);
+    const newConfig = { ...config, operation };
     setConfig(newConfig);
   };
   
   const handleConstantChange = (constant: string) => {
     const numValue = parseFloat(constant) || 0;
-    const newConfig = { ...localConfig, constant: numValue };
-    setLocalConfig(newConfig);
+    const newConfig = { ...config, constant: numValue };
     setConfig(newConfig);
   };
   
@@ -37,7 +32,7 @@ export default function MathNodeEditor({ manifest, config, setConfig }: NodeEdit
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center justify-between w-full px-2 py-1 text-xs border rounded-md bg-background hover:bg-muted h-8">
-                <span>{localConfig.operation || 'add'}</span>
+                <span>{config.operation || 'add'}</span>
                 <ChevronDown className="h-3 w-3" />
               </button>
             </DropdownMenuTrigger>
@@ -70,7 +65,7 @@ export default function MathNodeEditor({ manifest, config, setConfig }: NodeEdit
           </label>
           <Input
             type="number"
-            value={localConfig.constant || 0}
+            value={config.constant || 0}
             onChange={(e) => handleConstantChange(e.target.value)}
             placeholder="Enter constant..."
             className="w-full text-sm h-8"

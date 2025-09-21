@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { VariableInput } from '../../components/VariableInput';
 import { useWorkflowStore } from '../../stores/workflowStore';
 import { substituteVariables } from '../../lib/variableUtils';
@@ -6,22 +5,20 @@ import { Type } from 'lucide-react';
 import type { NodeEditorProps } from '../../types/node';
 
 export default function TextNodeEditor({ manifest, config, setConfig, nodeId }: NodeEditorProps) {
-  const [localConfig, setLocalConfig] = useState(config);
   const getAvailableVariables = useWorkflowStore(state => state.getAvailableVariables);
   
   const availableVariables = nodeId ? getAvailableVariables(nodeId) : [];
   
   const handleTextChange = (text: string) => {
-    const newConfig = { ...localConfig, text };
-    setLocalConfig(newConfig);
+    const newConfig = { ...config, text };
     setConfig(newConfig);
   };
 
-  const previewText = substituteVariables(localConfig.text || '', availableVariables);
-  const hasVariables = (localConfig.text || '').includes('{{');
+  const previewText = substituteVariables(config.text || '', availableVariables);
+  const hasVariables = (config.text || '').includes('{{');
   
   return (
-    <div className="p-3 min-w-[320px]">
+    <div className="p-3 min-w-[400px]">
       <div className="flex items-center gap-2 mb-3">
         <Type className="h-4 w-4 text-blue-600" />
         <h4 className="text-sm font-medium text-gray-700">{manifest.displayName}</h4>
@@ -33,7 +30,7 @@ export default function TextNodeEditor({ manifest, config, setConfig, nodeId }: 
             Text Template
           </label>
           <VariableInput
-            value={localConfig.text || ''}
+            value={config.text || ''}
             onChange={handleTextChange}
             availableVariables={availableVariables}
             placeholder="Enter text with {{variables}}..."
@@ -54,7 +51,7 @@ export default function TextNodeEditor({ manifest, config, setConfig, nodeId }: 
                 <button
                   key={variable.name}
                   onClick={() => {
-                    const currentText = localConfig.text || '';
+                    const currentText = config.text || '';
                     const newText = currentText + `{{${variable.name}}}`;
                     handleTextChange(newText);
                   }}
