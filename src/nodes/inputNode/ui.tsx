@@ -9,19 +9,19 @@ import { ChevronDown, Variable as VariableIcon } from 'lucide-react';
 import type { NodeEditorProps } from '../../types/node';
 
 export default function InputNodeEditor({ manifest, config, setConfig }: NodeEditorProps) {
-  const handleVariableNameChange = (variableName: string) => {
+  const handleVariableNameChange = async (variableName: string) => {
     const newConfig = { ...config, variableName };
-    setConfig(newConfig);
+    await setConfig(newConfig);
   };
   
-  const handleValueChange = (value: string) => {
+  const handleValueChange = async (value: string) => {
     const newConfig = { ...config, value };
-    setConfig(newConfig);
+    await setConfig(newConfig);
   };
   
-  const handleDataTypeChange = (dataType: string) => {
+  const handleDataTypeChange = async (dataType: string) => {
     const newConfig = { ...config, dataType };
-    setConfig(newConfig);
+    await setConfig(newConfig);
   };
 
   const getTypeColor = (type: string) => {

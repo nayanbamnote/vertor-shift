@@ -26,7 +26,7 @@
         "enum": ["text", "number", "boolean"]
       }
     },
-    "required": ["variableName", "value", "dataType"],
+    "required": ["dataType"],
     "additionalProperties": false
   },
   "ui": {
