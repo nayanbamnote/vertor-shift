@@ -20,19 +20,11 @@ import type {
 import { Trash2 } from "lucide-react";
 import "reactflow/dist/style.css";
 import { useWorkflowStore, type WorkflowNode } from "../stores/workflowStore";
-import { nodeRegistry } from "../nodes";
+import { nodeTypes } from "@/lib/nodeUtils";
+import { nodeRegistry } from "@/lib/nodeRegistry";
 import SidebarPalette from "./SidebarPalette";
-import { GenericReactFlowNode } from "./nodes";
 
 const rfSnapGrid: [number, number] = [16, 16];
-
-// Node types for ReactFlow - using generic component for all types
-const nodeTypes = {
-  'input-node': GenericReactFlowNode,
-  'llm-node': GenericReactFlowNode,
-  'text-node': GenericReactFlowNode,
-  'output-node': GenericReactFlowNode,
-};
 
 // Custom edge with hover delete icon
 const RemovableSmoothEdge: React.FC<EdgeProps> = (props) => {

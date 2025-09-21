@@ -1,0 +1,37 @@
+{
+  "type": "math-node",
+  "displayName": "Math Node",
+  "version": 1,
+  "category": "data",
+  "icon": "math.svg",
+  "description": "Mathematical operations and calculations",
+  "inputs": [
+    { "id": "input1", "label": "Input 1" },
+    { "id": "input2", "label": "Input 2" }
+  ],
+  "outputs": [
+    { "id": "output", "label": "Result" }
+  ],
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "operation": { 
+        "type": "string", 
+        "default": "add" 
+      },
+      "constant": { 
+        "type": "number", 
+        "default": 0 
+      }
+    },
+    "required": ["operation"],
+    "additionalProperties": false
+  },
+  "ui": {
+    "editor": "./ui.tsx"
+  },
+  "capabilities": {
+    "canRunFrontend": true,
+    "requiresBackend": false
+  }
+}

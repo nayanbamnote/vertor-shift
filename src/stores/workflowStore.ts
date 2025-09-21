@@ -2,7 +2,7 @@ import { create } from "zustand";
 import type { Node, Edge, Connection } from "reactflow";
 import { addEdge } from "reactflow";
 import type { NodeSerializable, ValidationResult } from "../types/node";
-import { nodeRegistry } from "../nodes";
+import { nodeRegistry } from "../nodes/index";
 import { validateAgainstSchema } from "../lib/validation";
 
 export interface WorkflowNode extends Node {

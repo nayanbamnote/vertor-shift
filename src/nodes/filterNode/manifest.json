@@ -1,0 +1,40 @@
+{
+  "type": "filter-node",
+  "displayName": "Filter Node",
+  "version": 1,
+  "category": "data",
+  "icon": "filter.svg",
+  "description": "Filter data based on conditions",
+  "inputs": [
+    { "id": "input", "label": "Data Input" }
+  ],
+  "outputs": [
+    { "id": "output", "label": "Filtered Output" }
+  ],
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "condition": { 
+        "type": "string", 
+        "default": "contains" 
+      },
+      "value": { 
+        "type": "string", 
+        "default": "" 
+      },
+      "caseSensitive": { 
+        "type": "boolean", 
+        "default": false 
+      }
+    },
+    "required": ["condition", "value"],
+    "additionalProperties": false
+  },
+  "ui": {
+    "editor": "./ui.tsx"
+  },
+  "capabilities": {
+    "canRunFrontend": true,
+    "requiresBackend": false
+  }
+}

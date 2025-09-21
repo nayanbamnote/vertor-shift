@@ -1,0 +1,40 @@
+{
+  "type": "delay-node",
+  "displayName": "Delay Node",
+  "version": 1,
+  "category": "control",
+  "icon": "delay.svg",
+  "description": "Add delay or timing control to workflow",
+  "inputs": [
+    { "id": "input", "label": "Data Input" }
+  ],
+  "outputs": [
+    { "id": "output", "label": "Delayed Output" }
+  ],
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "delay": { 
+        "type": "number", 
+        "default": 1000 
+      },
+      "unit": { 
+        "type": "string", 
+        "default": "milliseconds" 
+      },
+      "randomDelay": { 
+        "type": "boolean", 
+        "default": false 
+      }
+    },
+    "required": ["delay", "unit"],
+    "additionalProperties": false
+  },
+  "ui": {
+    "editor": "./ui.tsx"
+  },
+  "capabilities": {
+    "canRunFrontend": true,
+    "requiresBackend": false
+  }
+}

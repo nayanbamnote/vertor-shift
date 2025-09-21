@@ -1,8 +1,8 @@
 import { Handle, Position } from 'reactflow';
 import type { NodeProps } from 'reactflow';
 import { useWorkflowStore } from '../../stores/workflowStore';
-import { nodeRegistry } from '../../nodes';
-import { InputNode, LlmNode, TextNode, OutputNode } from '../../nodes';
+import { nodeRegistry } from '../../nodes/index';
+import { renderNodeUI } from '@/lib/nodeUtils';
 
 interface NodeData {
   label: string;
@@ -20,48 +20,6 @@ export default function GenericReactFlowNode(props: NodeProps<NodeData>) {
   const manifest = nodeRegistry.getManifest(node.type || '');
   if (!manifest) return null;
 
-  // Helper function to render the actual UI component inline
-  const renderNodeUI = () => {
-    const editorProps = {
-      nodeId: node.id,
-      manifest,
-      config: node.config,
-      setConfig: (patch: Record<string, any>) => updateNodeConfig(node.id, patch),
-    };
-
-    switch (node.type) {
-      case 'input-node':
-        return (
-          <div >
-            <InputNode.NodeEditor {...editorProps} />
-          </div>
-        );
-        
-      case 'text-node':
-        return (
-          <div >
-            <TextNode.NodeEditor {...editorProps} />
-          </div>
-        );
-        
-      case 'llm-node':
-        return (
-          <div >
-            <LlmNode.NodeEditor {...editorProps} />
-          </div>
-        );
-        
-      case 'output-node':
-        return (
-          <div >
-            <OutputNode.NodeEditor {...editorProps} />
-          </div>
-        );
-        
-      default:
-        return <div className="p-2 text-xs text-gray-500">Unknown node type</div>;
-    }
-  };
 
   return (
     <div className="bg-white border border-gray-300 rounded-lg shadow-md relative">
@@ -94,7 +52,7 @@ export default function GenericReactFlowNode(props: NodeProps<NodeData>) {
       ))}
       
       {/* Embedded Node UI */}
-      {renderNodeUI()}
+      {renderNodeUI(node, updateNodeConfig)}
     </div>
   );
 }

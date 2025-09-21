@@ -1,0 +1,36 @@
+{
+  "type": "transform-node",
+  "displayName": "Transform Node",
+  "version": 1,
+  "category": "data",
+  "icon": "transform.svg",
+  "description": "Transform data using various operations",
+  "inputs": [
+    { "id": "input", "label": "Data Input" }
+  ],
+  "outputs": [
+    { "id": "output", "label": "Transformed Output" }
+  ],
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "operation": { 
+        "type": "string", 
+        "default": "uppercase" 
+      },
+      "customFunction": { 
+        "type": "string", 
+        "default": "" 
+      }
+    },
+    "required": ["operation"],
+    "additionalProperties": false
+  },
+  "ui": {
+    "editor": "./ui.tsx"
+  },
+  "capabilities": {
+    "canRunFrontend": true,
+    "requiresBackend": false
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "type": "condition-node",
+  "displayName": "Condition Node",
+  "version": 1,
+  "category": "logic",
+  "icon": "condition.svg",
+  "description": "Conditional logic branching",
+  "inputs": [
+    { "id": "input", "label": "Data Input" }
+  ],
+  "outputs": [
+    { "id": "true", "label": "True" },
+    { "id": "false", "label": "False" }
+  ],
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "operator": { 
+        "type": "string", 
+        "default": "equals" 
+      },
+      "value": { 
+        "type": "string", 
+        "default": "" 
+      },
+      "dataType": { 
+        "type": "string", 
+        "default": "string" 
+      }
+    },
+    "required": ["operator", "value"],
+    "additionalProperties": false
+  },
+  "ui": {
+    "editor": "./ui.tsx"
+  },
+  "capabilities": {
+    "canRunFrontend": true,
+    "requiresBackend": false
+  }
+}

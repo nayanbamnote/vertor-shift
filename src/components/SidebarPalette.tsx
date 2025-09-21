@@ -1,15 +1,13 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
 	MousePointer2,
-	Bot,
-	Type,
-	Monitor,
 	ZoomIn,
 	ZoomOut,
 	ScanSearch,
 } from "lucide-react";
 import ExportDialog from "./ExportDialog";
 import ImportDialog from "./ImportDialog";
+import { nodeRegistry } from "../lib/nodeRegistry";
 
 type PaletteItem = {
 	id: string;
@@ -18,12 +16,46 @@ type PaletteItem = {
 	type: string;
 };
 
-const paletteItems: PaletteItem[] = [
-	{ id: "input", label: "Input Node", icon: <MousePointer2 size={16} />, type: "input-node" },
-	{ id: "llm", label: "LLM Node", icon: <Bot size={16} />, type: "llm-node" },
-	{ id: "text", label: "Text Node", icon: <Type size={16} />, type: "text-node" },
-	{ id: "output", label: "Output Node", icon: <Monitor size={16} />, type: "output-node" },
-];
+// Icon component - uses SVG file or MousePointer2 as default
+const IconComponent: React.FC<{ iconName?: string }> = ({ iconName }) => {
+	const [imageError, setImageError] = React.useState(false);
+
+	// If no icon name provided, use MousePointer2 as default
+	if (!iconName) {
+		return <MousePointer2 size={16} />;
+	}
+
+	// If image failed to load, show MousePointer2 as fallback
+	if (imageError) {
+		return <MousePointer2 size={16} />;
+	}
+
+	// Otherwise, load the SVG file directly
+	return (
+		<img 
+			src={`/icons/${iconName}`} 
+			alt="Node icon" 
+			className="w-4 h-4"
+			onError={() => setImageError(true)}
+		/>
+	);
+};
+
+const getIconComponent = (iconName?: string): React.ReactNode => {
+	return <IconComponent iconName={iconName} />;
+};
+
+// Generate palette items dynamically from node registry
+const generatePaletteItems = (): PaletteItem[] => {
+	const nodeDefinitions = nodeRegistry.getAllDefinitions();
+	
+	return nodeDefinitions.map((definition) => ({
+		id: definition.type.replace("-node", ""), // Remove "-node" suffix for cleaner id
+		label: definition.manifest.displayName,
+		icon: getIconComponent(definition.manifest.icon),
+		type: definition.type,
+	}));
+};
 
 interface SidebarPaletteProps {
 	onZoomIn: () => void;
@@ -32,6 +64,9 @@ interface SidebarPaletteProps {
 }
 
 export default function SidebarPalette({ onZoomIn, onZoomOut, onFitView }: SidebarPaletteProps) {
+	// Generate palette items dynamically from node registry
+	const paletteItems = useMemo(() => generatePaletteItems(), []);
+
 	return (
 		<aside className="flex w-64 shrink-0 flex-col gap-2 border-r bg-card p-3">
 			<div className="mb-2 text-sm font-medium">Nodes</div>
