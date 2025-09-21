@@ -25,7 +25,8 @@ export function createBaseNode(
   const defaultConfig = getDefaultConfig();
   const mergedConfig = { ...defaultConfig, ...config };
 
-  return {
+  // Create the base node object
+  const baseNode: BaseNode = {
     id,
     type: manifest.type,
     version: manifest.version,
@@ -40,23 +41,25 @@ export function createBaseNode(
     },
     
     validateConfig(config: any): ValidationResult {
-      return validateAgainstSchema(this.getConfigSchema(), config);
+      return validateAgainstSchema(baseNode.getConfigSchema(), config);
     },
     
     serialize(): NodeSerializable {
       return {
-        id: this.id,
-        type: this.type,
-        version: this.version,
-        config: this.config,
-        meta: this.meta
+        id: baseNode.id,
+        type: baseNode.type,
+        version: baseNode.version,
+        config: baseNode.config,
+        meta: baseNode.meta
       };
     },
     
     deserialize(snapshot: NodeSerializable): void {
-      this.id = snapshot.id;
-      this.config = snapshot.config;
-      this.meta = snapshot.meta;
+      baseNode.id = snapshot.id;
+      baseNode.config = snapshot.config;
+      baseNode.meta = snapshot.meta;
     }
   };
+
+  return baseNode;
 }
