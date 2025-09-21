@@ -12,16 +12,21 @@
   "configSchema": {
     "type": "object",
     "properties": {
+      "variableName": {
+        "type": "string",
+        "default": ""
+      },
       "value": { 
         "type": "string", 
         "default": "" 
       },
       "dataType": { 
         "type": "string", 
-        "default": "Text"
+        "default": "text",
+        "enum": ["text", "number", "boolean"]
       }
     },
-    "required": ["value", "dataType"],
+    "required": ["variableName", "value", "dataType"],
     "additionalProperties": false
   },
   "ui": {
