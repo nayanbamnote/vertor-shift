@@ -28,8 +28,9 @@ export default function ImportDialog() {
 				throw new Error("Invalid workflow format: missing nodes or edges");
 			}
 			
-			if (!Array.isArray(parsedGraph.nodes) || !Array.isArray(parsedGraph.edges)) {
-				throw new Error("Invalid workflow format: nodes and edges must be arrays");
+			if (typeof parsedGraph.nodes !== 'object' || Array.isArray(parsedGraph.nodes) || 
+				typeof parsedGraph.edges !== 'object' || Array.isArray(parsedGraph.edges)) {
+				throw new Error("Invalid workflow format: nodes and edges must be objects");
 			}
 
 			// Import the graph
